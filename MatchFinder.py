@@ -31,10 +31,40 @@ def find_straight_flush_cards(visible_cards: list):
     return results
 
 
+# 计算葫芦需要的牌
+def find_full_house_cards(visible_cards: list):
+    existing_cards = []
+    possible_cards = []
+    has_two_pairs = False
+    card_numbers = [card[1] for card in visible_cards]
+    pair_datas = Counter(card_numbers).most_common()
+    # 已经凑出三条
+    if pair_datas[0][1] == 3:
+        existing_cards = [card for card in visible_cards if card[1] == pair_datas[0][0]]
+        for i in range(1, len(pair_datas)):
+            card_number = pair_datas[i][0]
+            if pair_datas[i][1] >= 2:
+                existing_cards.extend([card for card in visible_cards if card[1] == card_number])
+                break
+            else:
+                possible_cards.append(('*', card_number))
+    # 已经有两对，差一个三条
+    elif pair_datas[0][1] == pair_datas[1][1] == 2:
+        has_two_pairs = True
+        for i in range(len(pair_datas)):
+            if pair_datas[i][1] == 2:
+                card_number = pair_datas[i][0]
+                existing_cards.extend([card for card in visible_cards if card[1] == card_number])
+                possible_cards.append(('*', card_number))
+            else:
+                break
+    return existing_cards, possible_cards, has_two_pairs
+
+
 # 计算同花需要的牌
 def find_flush_cards(visible_cards: list):
     existing_cards = []
-    possible_cards = []
+    possible_card = None
     possible_suit = is_flush_possible(visible_cards)
     if possible_suit != '':
         for card in visible_cards:
@@ -42,11 +72,8 @@ def find_flush_cards(visible_cards: list):
                 existing_cards.append(card)
         # 听牌
         if len(existing_cards) == 4:
-            full_cards = list(itertools.product([possible_suit], range(2, 15)))
-            for card in full_cards:
-                if card not in existing_cards:
-                    possible_cards.append(card)
-    return existing_cards, possible_cards
+            possible_card = (possible_suit, '*')
+    return existing_cards, possible_card
 
 
 # 判断同花是否可能出现
